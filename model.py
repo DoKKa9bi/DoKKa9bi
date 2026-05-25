@@ -15,21 +15,18 @@
 #Фото  -> CNN(1) -> Выделение области глаз -> CNN по области глаз(2)(6 слоёв) -> активация, субдескритизация, выпрямление, полносвязный ->                           
 #        -> Если на входе видео, то проходим в несколько итераций, отбрасывая кадры с EAR<0.25 и (3)-> выводим на градиентный спуск два полученых значения: вероятность для глаз(3), получаем результат
 
-from tensorflow.keras.models import Model as KerasModel
-from tensorflow.keras.layers import Input, Dense, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Dropout, Reshape, Concatenate, LeakyReLU
-from tensorflow.keras.optimizers import Adam
-
 import torch
 import torch.nn as nn
 import math
 import torchvision
+import dlib
 
 IMGWIDTH=256
 IMGHEIGHT=128
 
 #Выделение массива с тремя областями из входного изображения
 def see_eyes():
-	pass
+	
 
 ##############################################
 #Область глаза, три ветви, 4 слоя
@@ -61,12 +58,16 @@ class RotEyes(nn.Module):
 			nn.AdaptiveAvgPool2d((1, 1))  
 	)
 	
-	def forward(self, area: torch.Tensor, eye: torch.Tensor, iris: torch.Tensor):
+	def forward(self, area: torch.Tensor, eye_l: torch.Tensor, eye_r: torch.Tensor, iris_l: torch.Tensor, iris_r: torch.Tensor):
 		f_area = self.RotArea(area).flatten(start_dim=1)
-        f_eye  = self.RotEye(eye).flatten(start_dim=1)
-        f_iris  = self.RotIris(iris).flatten(start_dim=1)
+		
+        f_eye_l  = self.RotEye(eye_l).flatten(start_dim=1)
+		f_eye_r  = self.RotEye(eye_r).flatten(start_dim=1)
+        f_iris_l  = self.RotIris(iris_l).flatten(start_dim=1)
+        f_iris_r  = self.RotIris(iris_r).flatten(start_dim=1)
         
-        # Позднее объединение
+		f_eye  = (f_eye_l  + f_eye_r)  * 0.5
+   		f_iris = (f_iris_l + f_iris_r) * 0.5
         final = torch.cat([f_area, f_eye, f_iris], dim=1)  
         return self.fusion(final)                        
 
