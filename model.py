@@ -115,13 +115,13 @@ class RotCNN(nn.Module):
 			
 			#32x16 -> 16x8
 			nn.Conv2d(256, 512, 3, padding=1)
-			nn.GroupNorm2d(256)
+			nn.GroupNorm2d(512)
 			nn.ReLU(inplace=True)	
 			nn.MaxPool2d(kernel_size=2, stride=2)
 
 			#16x8 -> 16x8
 			nn.Conv2d(512, 512, 3, padding=1)
-			nn.GroupNorm2d(256)
+			nn.GroupNorm2d(512)
 			nn.ReLU(inplace=True)	
 					
             nn.AdaptiveAvgPool2d((1, 1))  
