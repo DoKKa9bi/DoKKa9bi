@@ -21,7 +21,6 @@ from tensorflow.keras.optimizers import Adam
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import math
 import torchvision
 
@@ -58,7 +57,7 @@ class RotEyes(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
 
-            #32x16 -> 32x16
+            #32x16 -> 16x8
             nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=True)
@@ -80,8 +79,8 @@ class RotEyes(nn.Module):
         f_iris  = self.RotTris(iris).view(iris.size(0), -1)
         
         # Позднее объединение
-        fused = torch.cat([f_whole, f_lids, f_iris], dim=1)  # (B, 768)
-        return self.fusion(fused)                        
+        final = torch.cat([f_area, f_eye, f_iris], dim=1)  # (B, 768)
+        return self.fusion(final)                        
 		
 #Макет, на всю область глаз, 6 слоёв
 class RotCNN(nn.Module):
