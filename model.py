@@ -30,7 +30,8 @@ IMGHEIGHT=128
 #Выделение массива с тремя областями из входного изображения
 def see_eyes()
 
-#Область глаза, три ветви, 6 слоёв
+##############################################
+#Область глаза, три ветви, 4 слоя
 class RotEyes(nn.Module):
 	def __init__(self, num_classes=1):
 		super().__init__()
@@ -40,7 +41,8 @@ class RotEyes(nn.Module):
 
 	def branch(self):
 		reurn nn.Sequental(
-		nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1),
+			#256x128 -> 128x64
+			nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
@@ -81,7 +83,8 @@ class RotEyes(nn.Module):
         # Позднее объединение
         final = torch.cat([f_area, f_eye, f_iris], dim=1)  # (B, 768)
         return self.fusion(final)                        
-		
+
+##############################################
 #Макет, на всю область глаз, 6 слоёв
 class RotCNN(nn.Module):
 	def __init__(self, num_classes=1):
@@ -109,13 +112,18 @@ class RotCNN(nn.Module):
             nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=True)
-
+			
 			#32x16 -> 16x8
-			nn.Conv2d(256, 256, 3, padding=1)
+			nn.Conv2d(256, 512, 3, padding=1)
 			nn.GroupNorm2d(256)
 			nn.ReLU(inplace=True)	
-			nn.MaxPool2d(2)
-		
+			nn.MaxPool2d(kernel_size=2, stride=2)
+
+			#16x8 -> 16x8
+			nn.Conv2d(512, 512, 3, padding=1)
+			nn.GroupNorm2d(256)
+			nn.ReLU(inplace=True)	
+					
             nn.AdaptiveAvgPool2d((1, 1))  
         )
         
@@ -132,3 +140,50 @@ class RotCNN(nn.Module):
         x = torch.flatten(x, 1)  
         x = self.classifier(x)
         return x
+##############################################
+
+#Макет, на всю область глаз, 4 слоя
+class RotCNN(nn.Module):
+	def __init__(self, num_classes=1):
+	super().__init__()
+	self.features nn.Sequential(
+            #256x128 -> 128x64
+            nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            #128x64 -> 64x32
+            nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            #64x32 -> 32x16
+            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            #32x16 -> 16x8
+            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True)
+											
+            nn.AdaptiveAvgPool2d((1, 1))  
+        )
+        
+        self.classifier = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(256, 64),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.2),
+            nn.Linear(64, num_classes)  
+        )
+
+    def forward(self, x):
+        x = self.features(x)
+        x = torch.flatten(x, 1)  
+        x = self.classifier(x)
+        return x
+##############################################
