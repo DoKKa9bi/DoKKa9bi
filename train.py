@@ -87,7 +87,7 @@ def load_data_split(data_dir: str, labels_file: str, train_ratio: float = 0.8):
     val_paths = shuffled.loc[split_idx:, "full_path"].tolist()
     val_labels = shuffled.loc[split_idx:, "label"].tolist()
     
-     return train_paths, train_labels, val_paths, val_labels
+    return train_paths, train_labels, val_paths, val_labels
 #?????????????????????????????????????????????????????????
 
 
@@ -276,7 +276,7 @@ def main():
     
     for config in MODELS_CONFIG:
         print(f"\nTraining: {config['name']}")
-        model, history, train_time = train_one_model(
+        model, history, train_time = train_model(
             config, train_loader, val_loader, EPOCHS, LEARNING_RATE
         )
         
@@ -301,7 +301,7 @@ def main():
     plot_summary_table(all_metrics)
     
     
-    print("\n" _"="*50)
+    print("\n"+"_"=*50)
     print("PROFIT?")
     print(" _"*50)
     for name, m in all_metrics.items():
@@ -312,5 +312,5 @@ def main():
 
 if __name__ == "__main__":
     
-    from model.py import see_eyes, RotEyes, RotCNN4, RotCNN6    
+    from model import see_eyes, RotEyes, RotCNN4, RotCNN6    
     main()
