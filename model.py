@@ -24,6 +24,37 @@ import dlib
 IMGWIDTH=256
 IMGHEIGHT=128
 
+def crop_with_padding(pts, img, pad=5):
+        x, y, w, h = cv2.boundingRect(pts)
+        x1, y1 = max(0, x - pad), max(0, y - pad)
+        x2, y2 = min(img.shape[1], x + w + pad), min(img.shape[0], y + h + pad)
+        return img[y1:y2, x1:x2], (x1, y1)
+
+def pts_to_mask(pts, shape_img):
+        mask = np.zeros(shape_img[:2], dtype=np.uint8)
+        pts = np.array([pts], dtype=np.int32)
+        cv2.fillPoly(mask, pts, 255)
+        return mask
+
+
+def iris_mask(crop_bgr, eye_pts):
+        center = np.mean(eye_pts, axis=0).astype(int)
+        width = np.linalg.norm(eye_pts[0] - eye_pts[3])  
+        pupil_r = int(width * 0.15)
+        iris_r = int(width * 0.35)
+        crop_center = (center[0] - 0, center[1] - 0) 
+        h, w = crop_bgr.shape[:2]
+        mask = np.zeros((h, w), dtype=np.uint8)
+        cv2.circle(mask, (center[0], center[1]), iris_r, 255, -1)
+        return mask / 255.0
+
+def to_tensor(arr):
+        if arr.ndim == 2:
+            return torch.from_numpy(arr).unsqueeze(0).float()
+        else:
+            return torch.from_numpy(arr.transpose(2, 0, 1)).float() / 255.0
+
+
 #Выделение массива с тремя областями из входного изображения
 def see_eyes(image_bgr: np.ndarray,
     predictor_path: str,
@@ -34,7 +65,33 @@ def see_eyes(image_bgr: np.ndarray,
     eye_r_m = list(range(42, 48))
 
 	detector = dlib.get_frontal_face_detector()
-	predictor = dlib.shape_predictor(area_m)
+	predictor = dlib.shape_predictor(predictor_path)
+	gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
+    face = detector(gray, 1)
+    if len(face) == 0:
+        return [0,0,0,0,0]
+
+    shape = predictor(gray, face[0])
+    landmarks = np.array([[p.x, p.y] for p in shape.parts()])
+    
+	area_mask = pts_to_mask(region_pts, image_bgr)
+    area = to_tensor(mask_eye_region)
+    
+    # 2) Правый глаз (crop BGR)
+    right_e, _ = crop_with_padding(right_pts, image_bgr, pad=10)
+    eye_r = to_tensor(right_crop)
+    
+    # 3) Левый глаз (crop BGR)
+    left_e, _ = crop_with_padding(left_pts, image_bgr, pad=10)
+    eye_l = to_tensor(left_crop)
+    
+    # 4) Правая радужка + зрачок (mask)
+    iris_r_mask = iris_mask(right_crop, right_pts)
+    iris_r = torch.from_numpy(iris_r_mask).unsqueeze(0)
+    
+    # 5) Левая радужка + зрачок (mask)
+    iris_l_mask = iris_mask(left_crop, left_pts)
+    iris_l = torch.from_numpy(iris_l_mask).unsqueeze(0)
 
 	return area, eye_l, eye_r, iris_l, iris_r
 
