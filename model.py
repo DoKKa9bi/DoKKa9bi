@@ -124,7 +124,9 @@ class RotEyes(nn.Module):
 			nn.AdaptiveAvgPool2d((1, 1))  
 	)
 	
-	def forward(self, area: torch.Tensor, eye_l: torch.Tensor, eye_r: torch.Tensor, iris_l: torch.Tensor, iris_r: torch.Tensor):
+	def forward(self, image_bgr: np.ndarray, predictor_path: str):
+		
+		area, eye_l, eye_r, iris_l, iris_r = see_eyes(image_bgr, predictor_path)
 		f_area = self.RotArea(area).flatten(start_dim=1)
 		
         f_eye_l  = self.RotEye(eye_l).flatten(start_dim=1)
