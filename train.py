@@ -128,13 +128,13 @@ def train_model(model_config: dict, train_loader: DataLoader, val_loader: DataLo
                 input_1 = tensors_batch[0].to(DEVICE)  
                 outputs = model(input_1)
             
-            loss = criterion(outputs.squeeze(), labels_batch)
+            loss = criterion(outputs.squeeze(1), labels_batch)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
            
             preds = (torch.sigmoid(outputs) > 0.5).float()
-            train_correct += (preds.squeeze() == labels_batch).sum().item()
+            train_correct += (preds.squeeze(1) == labels_batch).sum().item()
             train_total += labels_batch.size(0)
             train_loss_sum += loss.item()
         
@@ -155,7 +155,7 @@ def train_model(model_config: dict, train_loader: DataLoader, val_loader: DataLo
                 
                 loss = criterion(outputs.squeeze(), labels_batch)
                 preds = (torch.sigmoid(outputs) > 0.5).float()
-                val_correct += (preds.squeeze() == labels_batch).sum().item()
+                val_correct += (preds.squeeze(1) == labels_batch).sum().item()
                 val_total += labels_batch.size(0)
                 val_loss_sum += loss.item()
         
