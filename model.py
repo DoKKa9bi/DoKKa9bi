@@ -25,8 +25,18 @@ IMGWIDTH=256
 IMGHEIGHT=128
 
 #Выделение массива с тремя областями из входного изображения
-def see_eyes():
-	
+def see_eyes(image_bgr: np.ndarray,
+    predictor_path: str,
+    eye_region_indices: list = None
+):
+	area_m=list(1,17,18,21)
+	eye_l_m = list(range(36, 42))
+    eye_r_m = list(range(42, 48))
+
+	detector = dlib.get_frontal_face_detector()
+	predictor = dlib.shape_predictor(area_m)
+
+	return area, eye_l, eye_r, iris_l, iris_r
 
 ##############################################
 #Область глаза, три ветви, 4 слоя
