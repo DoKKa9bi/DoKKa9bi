@@ -23,17 +23,17 @@ TRAIN_SPLIT = 0.8
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 NUM_WORKERS = 4
 
-# Имена моделей и их конфигурация
+
 MODELS_CONFIG = [
     {
         "name": "RotEyes",
-        "class": RotEyes,           # ← уже импортировано из вашего модуля
-        "input_mode": "all_5",      # принимает 5 тензоров
+        "class": RotEyes,           
+        "input_mode": "all_5",     
     },
     {
         "name": "RotCNN4",
         "class": RotCNN4,
-        "input_mode": "first_only", # принимает только тензор №1
+        "input_mode": "first_only", 
     },
     {
         "name": "RotCNN6",
@@ -99,9 +99,9 @@ def train_model(model_config: dict, train_loader: DataLoader, val_loader: DataLo
     input_mode = model_config["input_mode"]
     model_name = model_config["name"]
     
-    # Инициализация модели (предполагаем стандартный __init__)
+    
     model = ModelClass().to(DEVICE)
-    criterion = nn.BCEWithLogitsLoss()  # или nn.CrossEntropyLoss() — под вашу задачу
+    criterion = nn.BCEWithLogitsLoss()  
     optimizer = optim.Adam(model.parameters(), lr=lr)
     
     history = {
@@ -193,11 +193,11 @@ def measure_inference_time(model, model_config: dict, test_loader: DataLoader, n
             else:
                 inputs = [tensors_batch[0].to(DEVICE)]
             
-            # Warm-up
+            
             if i == 0:
                 _ = model(*inputs) if input_mode == "all_5" else model(inputs[0])
             
-            # Замер
+            
             start = time.time()
             _ = model(*inputs) if input_mode == "all_5" else model(inputs[0])
             torch.cuda.synchronize() if DEVICE.type == "cuda" else None
@@ -260,9 +260,7 @@ def plot_summary_table(all_metrics: Dict[str, dict], output_path: str = "results
 
 
 def main():
-    print("🔧 Инициализация...")
     
-    # 1. Загрузка и разделение данных
     train_paths, train_labels, val_paths, val_labels = load_data_split(
         DATA_DIR, LABELS_FILE, TRAIN_SPLIT
     )
@@ -273,7 +271,6 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=NUM_WORKERS)
     
-    # 2. Последовательное обучение всех моделей
     all_histories = {}
     all_metrics = {}
     
@@ -283,10 +280,10 @@ def main():
             config, train_loader, val_loader, EPOCHS, LEARNING_RATE
         )
         
-        # 3. Замер инференса
+        
         inf_time, inf_std = measure_inference_time(model, config, val_loader)
         
-        # 4. Сохранение метрик
+        
         all_histories[config["name"]] = history
         all_metrics[config["name"]] = {
             "best_val_acc": max(history["val_acc"]),
@@ -295,15 +292,15 @@ def main():
             "inference_std": inf_std,
         }
         
-        # 5. (Опционально) Сохранение модели
-        # torch.save(model.state_dict(), f"models/{config['name']}_final.pt")
+        
+        torch.save(model.state_dict(), f"models/{config['name']}_final.pt")
     
-    # 6. Визуализация
+    
     print("\nGenerating...")
     plot_accuracy_curves(all_histories)
     plot_summary_table(all_metrics)
     
-    # 7. Финальный отчёт
+    
     print("\n" _"="*50)
     print("PROFIT?")
     print(" _"*50)
