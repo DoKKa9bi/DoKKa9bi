@@ -169,7 +169,8 @@ class RotCNN6(nn.Module):
             nn.Linear(64, num_classes)  
         )
 
-    def forward(self, x):
+    def forward(self, image_bgr: np.ndarray, predictor_path: str):
+		x, _ = see_eyes(image_bgr, predictor_path)
         x = self.features(x)
         x = torch.flatten(x, 1)  
         x = self.classifier(x)
@@ -201,7 +202,8 @@ class RotCNN4(nn.Module):
             nn.Linear(64, num_classes)  
         )
 
-    def forward(self, x):
+    def forward(self, image_bgr: np.ndarray, predictor_path: str):
+		x, _ = see_eyes(image_bgr, predictor_path)
         x = self.features(x)
         x = torch.flatten(x, 1)  
         x = self.classifier(x)
