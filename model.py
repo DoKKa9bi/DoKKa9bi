@@ -57,8 +57,7 @@ def to_tensor(arr):
 
 #Выделение массива с тремя областями из входного изображения
 def see_eyes(image_bgr: np.ndarray,
-    predictor_path: str,
-    eye_region_indices: list = None
+    predictor_path: str
 ):
 	area_m=list(1,17,18,21)
 	eye_l_m = list(range(36, 42))
